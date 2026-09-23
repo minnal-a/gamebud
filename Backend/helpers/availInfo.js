@@ -21,14 +21,15 @@ function matToDic(availMat) {
 }
 
 function dicToMat(availDic) {
-    availMat = [];
+    const availMat = [];
     console.log(availDic);
     for(let i = 0; i<24; i++){
         availMat.push([0,0,0,0,0,0,0]);
     }
 
     availDic.forEach(dayHour => {
-        availMat[dayHour.time-9][dayHour.day] = 1;
+        // inverse of matToDic: row 0 is 9am, so early-morning hours wrap around
+        availMat[(dayHour.time + 15) % 24][dayHour.day] = 1;
     });
 
     return availMat;
