@@ -51,8 +51,8 @@ Frontend (build args; Create React App bakes them into the bundle):
 ## Run on Kubernetes (kind)
 
 See [gamebuddy-gitops](https://github.com/minnal-a/gamebuddy-gitops):
-with both repos cloned side by side, `./scripts/kind-up.sh ../gamebud` from
-the gitops repo builds these images and deploys them.
+`./scripts/bootstrap.sh` there creates a kind cluster with Argo CD, which
+then deploys the images CI builds from this repo.
 
 ## CI/CD
 
