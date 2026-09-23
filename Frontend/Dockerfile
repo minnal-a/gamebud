@@ -1,5 +1,7 @@
 # ---- build stage: compile the static React bundle ----
-FROM node:22-bookworm-slim AS build
+# The output is plain HTML/JS/CSS, so build on the runner's own platform even
+# for multi-platform images (avoids a slow emulated build).
+FROM --platform=$BUILDPLATFORM node:22-bookworm-slim AS build
 WORKDIR /app
 
 COPY package.json package-lock.json ./
