@@ -12,17 +12,27 @@ const router = new express.Router();
 const { createToken } = require("../helpers/tokens");
 const userAuthSchema = require("../schemas/userAuth.json");
 const userRegisterSchema = require("../schemas/userRegister.json");
-const { BadRequestError } = require("../expressError");
+const { BadRequestError, ExpressError } = require("../expressError");
 const SteamAuth = require("node-steam-openid");
 const { options } = require("./users");
+const { API_URL, FRONTEND_URL, STEAM_API_KEY } = require("../config");
 
-const steamApi = '116CA03793EB7CC0450211F41D2372F1';
+const steamApi = STEAM_API_KEY;
 
-const steam = new SteamAuth({
-  realm: "http://localhost:3001", // Site name displayed to users on logon
-  returnUrl: "http://localhost:3001/auth/steam/authenticate", // Your return route
-  apiKey: steamApi // Steam API key
-});
+// SteamAuth throws without an API key, so only create it when one is set;
+// the rest of the app can run without Steam login.
+const steam = steamApi
+  ? new SteamAuth({
+      realm: API_URL, // Site name displayed to users on logon
+      returnUrl: `${API_URL}/auth/steam/authenticate`, // Your return route
+      apiKey: steamApi // Steam API key
+    })
+  : null;
+
+function requireSteam() {
+  if (!steam) throw new ExpressError("Steam login is not configured (STEAM_API_KEY is not set)", 503);
+  return steam;
+}
 
 /** POST /auth/token:  { username, password } => { token }
  *
@@ -74,15 +84,18 @@ router.post("/register", async function (req, res, next) {
   }
 });
 
-router.get("/steam", async (req, res) => {
-  const redirectUrl = await steam.getRedirectUrl();
-  
-  return res.json({redirectUrl});
+router.get("/steam", async (req, res, next) => {
+  try {
+    const redirectUrl = await requireSteam().getRedirectUrl();
+    return res.json({redirectUrl});
+  } catch (err) {
+    return next(err);
+  }
 });
 
 router.get("/steam/authenticate", async (req, res, next) => {
   try {
-    const user = await steam.authenticate(req);
+    const user = await requireSteam().authenticate(req);
     console.log(user);
     if(!user.name) user.name=user.username;
     const newUser = await User.register({ username: user.username, steam_id: user.steamid, name:user.name,
@@ -107,7 +120,7 @@ router.get("/steam/authenticate", async (req, res, next) => {
       }
     });
 
-    return res.redirect(`http://localhost:3000/user/${newUser.username}`);    
+    return res.redirect(`${FRONTEND_URL}/user/${newUser.username}`);    
   } catch (err) {
     return next(err);
   }

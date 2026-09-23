@@ -8,7 +8,8 @@ import Popup from 'reactjs-popup';
 import { Card, CardBody, CardTitle } from "reactstrap";
 import io from 'socket.io-client';
 
-const socket = io.connect('http://localhost:4000/');
+const CHAT_URL = process.env.REACT_APP_CHAT_URL || 'http://localhost:4000/';
+const socket = io.connect(CHAT_URL);
 
 console.log(socket);
 

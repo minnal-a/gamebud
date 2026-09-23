@@ -2,6 +2,7 @@
 const Appt = require("./models/appt");
 const { Server } = require('socket.io');
 const app = require("./app");
+const { CHAT_PORT, FRONTEND_URL } = require("./config");
 http = require('http');
 
 const server = http.createServer(app);
@@ -11,7 +12,7 @@ let allUsers = [];
 
 const io = new Server(server, {
   cors: {
-    origin: 'http://localhost:3000',
+    origin: FRONTEND_URL,
     methods: ['GET', 'POST'],
   },
 });
@@ -62,4 +63,4 @@ io.on('connection', (socket) => {
   
 });
 
-server.listen(4000, () => 'Server is running on port 4000');
+server.listen(CHAT_PORT, () => console.log(`Chat server running on port ${CHAT_PORT}`));

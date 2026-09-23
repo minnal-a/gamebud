@@ -5,7 +5,13 @@ const { getDatabaseUri } = require("./config");
 
 let db;
 
-if (process.env.NODE_ENV === "production") {
+// SSL defaults on in production (hosted Postgres); DATABASE_SSL=false turns it
+// off, e.g. for the Postgres container in docker-compose.
+const useSsl = process.env.DATABASE_SSL
+    ? process.env.DATABASE_SSL === "true"
+    : process.env.NODE_ENV === "production";
+
+if (useSsl) {
   db = new Client({
     connectionString: getDatabaseUri(),
     ssl: {
@@ -17,7 +23,6 @@ if (process.env.NODE_ENV === "production") {
     connectionString: getDatabaseUri()
   });
 }
-db.host = "localhost";
 db.connect();
 
 module.exports = db;
