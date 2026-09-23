@@ -54,6 +54,28 @@ See [gamebuddy-gitops](https://github.com/minnal-a/gamebuddy-gitops):
 with both repos cloned side by side, `./scripts/kind-up.sh ../gamebud` from
 the gitops repo builds these images and deploys them.
 
+## CI/CD
+
+`.github/workflows/ci.yml` runs on every push to `main`:
+
+1. **Test**: `npm run test:ci` in `Backend/`
+2. **Build + push**: backend and frontend images (linux/amd64 + arm64) to
+   `ghcr.io/minnal-a/gamebuddy-{backend,frontend}:<commit SHA>`
+3. **Deploy**: commits the new tag to
+   [gamebuddy-gitops](https://github.com/minnal-a/gamebuddy-gitops)
+   (`overlays/local/kustomization.yaml`), which Argo CD syncs
+
+Needs an Actions secret `GITOPS_TOKEN`: a fine-grained personal access token
+with **Contents: Read and write** on `minnal-a/gamebuddy-gitops` only.
+
+### Tests
+
+| Suite | Status |
+|---|---|
+| `Backend/helpers`, `Backend/middleware` (17 unit tests) | pass; run in CI |
+| `Backend/models`, `Backend/routes`, `config.test.js`, `app.test.js` | fail: written for the Jobly template project (password/first_name columns, `jobly` DB) and never updated for GameBuddy |
+| `Frontend/src/App.test.js` | fails: default Create React App test ("learn react"); Jest also cannot load axios' ES module |
+
 ## Run without Docker
 
 ```bash
