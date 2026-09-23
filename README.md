@@ -8,6 +8,11 @@ Backend/    Express REST API (:3001) + Socket.IO chat server (:4000)
 Frontend/   React (Create React App), served by nginx in Docker
 ```
 
+This repo holds the application code, Dockerfiles and docker-compose.
+Kubernetes manifests live in
+[minnal-a/gamebuddy-gitops](https://github.com/minnal-a/gamebuddy-gitops),
+which Argo CD watches.
+
 ## Run with Docker
 
 ```bash
@@ -42,6 +47,12 @@ Frontend (build args; Create React App bakes them into the bundle):
 |---|---|
 | `REACT_APP_BASE_URL` | `http://localhost:3001` |
 | `REACT_APP_CHAT_URL` | `http://localhost:4000` |
+
+## Run on Kubernetes (kind)
+
+See [gamebuddy-gitops](https://github.com/minnal-a/gamebuddy-gitops):
+with both repos cloned side by side, `./scripts/kind-up.sh ../gamebud` from
+the gitops repo builds these images and deploys them.
 
 ## Run without Docker
 
