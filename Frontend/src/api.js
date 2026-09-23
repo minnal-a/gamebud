@@ -11,7 +11,9 @@ const BASE_URL = process.env.REACT_APP_BASE_URL || "http://localhost:3001";
 class GBApi {
   // the token for interactive with the API will be stored here.
   static token;
-  static username;
+  // Restored on page load so child components (e.g. ApptInfo) see it before
+  // App's effect runs; production builds don't double-run effects like StrictMode dev does.
+  static username = localStorage.getItem("username") || "";
   static user;
 
   static async request(endpoint, data = {}, method = "get") {
