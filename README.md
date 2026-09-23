@@ -1,0 +1,52 @@
+# GameBuddy
+
+Match with other Steam players who own the same games and share your free
+time, then chat in a session room. PERN stack: PostgreSQL, Express, React, Node.
+
+```
+Backend/    Express REST API (:3001) + Socket.IO chat server (:4000)
+Frontend/   React (Create React App), served by nginx in Docker
+```
+
+## Run with Docker
+
+```bash
+cp .env.example .env      # add your STEAM_API_KEY for Steam login
+docker compose up --build
+```
+
+Open http://localhost:3000. Postgres starts with the schema from
+`Backend/gb-schema.sql` loaded on first run (data lives in the `db-data`
+volume; `docker compose down -v` resets it).
+
+Without `STEAM_API_KEY` the app still starts, but `/auth/steam` returns 503.
+
+## Configuration
+
+Backend (set in `docker-compose.yml`):
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `DATABASE_URL` | `gamebuddy` | Postgres connection string |
+| `DATABASE_SSL` | on when `NODE_ENV=production` | `false` for a local/compose Postgres |
+| `SECRET_KEY` | `secret-dev` | JWT signing secret |
+| `PORT` | `3001` | REST API port |
+| `CHAT_PORT` | `4000` | Socket.IO chat port |
+| `API_URL` | `http://localhost:3001` | Public API URL (Steam OpenID realm/return URL) |
+| `FRONTEND_URL` | `http://localhost:3000` | Post-login redirect and chat CORS origin |
+| `STEAM_API_KEY` | none | Steam Web API key |
+
+Frontend (build args; Create React App bakes them into the bundle):
+
+| Variable | Default |
+|---|---|
+| `REACT_APP_BASE_URL` | `http://localhost:3001` |
+| `REACT_APP_CHAT_URL` | `http://localhost:4000` |
+
+## Run without Docker
+
+```bash
+createdb gamebuddy && psql gamebuddy < Backend/gb-schema.sql
+cd Backend && npm install && npm start     # :3001 and :4000
+cd Frontend && npm install && npm start    # :3000
+```

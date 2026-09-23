@@ -1,0 +1,59 @@
+# Runs GameBuddy locally: Postgres + Express API/chat + React (nginx).
+#   docker compose up --build
+# Then open http://localhost:3000
+#
+# Steam login needs a Steam Web API key: put STEAM_API_KEY=... in a .env file
+# next to this one (see .env.example). Everything else has working defaults.
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: gamebuddy
+      POSTGRES_PASSWORD: gamebuddy
+      POSTGRES_DB: gamebuddy
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      # Runs once, when the volume is first created
+      - ./Backend/gb-schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    # TCP check: the temporary server Postgres runs during init only listens
+    # on a socket, so this stays unhealthy until the schema has loaded
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U gamebuddy -d gamebuddy"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  backend:
+    build: ./Backend
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://gamebuddy:gamebuddy@db:5432/gamebuddy
+      DATABASE_SSL: "false"
+      SECRET_KEY: ${SECRET_KEY:-change-me-in-production}
+      PORT: 3001
+      CHAT_PORT: 4000
+      API_URL: http://localhost:3001
+      FRONTEND_URL: http://localhost:3000
+      STEAM_API_KEY: ${STEAM_API_KEY:-}
+    ports:
+      - "3001:3001"
+      - "4000:4000"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./Frontend
+      args:
+        REACT_APP_BASE_URL: http://localhost:3001
+        REACT_APP_CHAT_URL: http://localhost:4000
+    depends_on:
+      - backend
+    ports:
+      - "3000:80"
+    restart: unless-stopped
+
+volumes:
+  db-data:

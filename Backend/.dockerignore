@@ -1,0 +1,8 @@
+node_modules
+npm-debug.log
+.env
+*.test.js
+**/_testCommon.js
+gamebuddy.sql
+Dockerfile
+.dockerignore
