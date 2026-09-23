@@ -22,8 +22,19 @@ kubectl config use-context "kind-$CLUSTER" >/dev/null
 
 docker build -t gamebuddy-backend:local "$ROOT/Backend"
 docker build -t gamebuddy-frontend:local "$ROOT/Frontend"
-docker pull -q postgres:16-alpine
-kind load docker-image --name "$CLUSTER" gamebuddy-backend:local gamebuddy-frontend:local postgres:16-alpine
+
+# Copy a locally built image into the kind node. Not `kind load docker-image`:
+# it imports --all-platforms, which fails ("content digest ... not found")
+# when Docker Desktop's containerd image store holds only this machine's
+# platform. Importing just the node's platform works with either store.
+# postgres:16-alpine is not loaded; the node pulls it from Docker Hub.
+load_image() {
+  echo "Loading $1 into the kind node..."
+  docker save "$1" | docker exec -i "$CLUSTER-control-plane" \
+    ctr --namespace=k8s.io images import --digests --snapshotter=overlayfs -
+}
+load_image gamebuddy-backend:local
+load_image gamebuddy-frontend:local
 
 kubectl apply -k "$ROOT/k8s/base"
 
