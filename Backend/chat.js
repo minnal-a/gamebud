@@ -12,7 +12,9 @@ let allUsers = [];
 
 const io = new Server(server, {
   cors: {
-    origin: FRONTEND_URL,
+    // Only needed when the React dev server runs on another port; behind the
+    // nginx proxy the chat is same-origin
+    origin: FRONTEND_URL || 'http://localhost:3000',
     methods: ['GET', 'POST'],
   },
 });
